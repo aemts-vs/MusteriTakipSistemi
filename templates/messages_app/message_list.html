@@ -1,0 +1,92 @@
+<!-- templates/messages_app/message_list.html -->
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Mesajlarım{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h3">{{ page_title }}</h1>
+    <a href="{% url 'messages_app:send_message' %}" class="btn btn-primary"><i class="fas fa-plus-circle"></i> Yeni Mesaj Oluştur</a>
+</div>
+
+<div class="card shadow-sm">
+    <div class="card-body">
+        {% if messages %} {# 'messages' burada context'teki mesaj listesi, Django'nun message framework'ü değil #}
+        <div class="table-responsive">
+            <table class="table table-hover table-striped">
+                <thead>
+                    <tr>
+                        <th scope="col">Konu</th>
+                        <th scope="col">Tipi</th>
+                        <th scope="col">Gönderen</th>
+                        <th scope="col">Sipariş Kodu</th>
+                        <th scope="col">Durum</th>
+                        <th scope="col">Tarih</th>
+                        <th scope="col">İşlemler</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for message_obj in messages %} {# Context'ten gelen 'messages' değişkeni #}
+                    <tr class="{% if not message_obj.is_read_by_recipient %}fw-bold{% endif %}">
+                        <td><a href="{% url 'messages_app:message_detail' pk=message_obj.pk %}">{{ message_obj.subject }}</a></td>
+                        <td><span class="badge bg-secondary">{{ message_obj.get_message_type_display }}</span></td>
+                        <td>{{ message_obj.sender.get_full_name|default:message_obj.sender.username }}</td>
+                        <td>{{ message_obj.order.order_id|default:"-" }}</td>
+                        <td>
+                            {% if message_obj.status == 'new' %}
+                                <span class="badge bg-info">{{ message_obj.get_status_display }}</span>
+                            {% elif message_obj.status == 'read' %}
+                                <span class="badge bg-primary">{{ message_obj.get_status_display }}</span>
+                            {% elif message_obj.status == 'replied' %}
+                                <span class="badge bg-success">{{ message_obj.get_status_display }}</span>
+                            {% else %}
+                                <span class="badge bg-secondary">{{ message_obj.get_status_display }}</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ message_obj.created_at|date:"d M Y H:i" }}</td>
+                        <td>
+                            <a href="{% url 'messages_app:message_detail' pk=message_obj.pk %}" class="btn btn-sm btn-secondary" title="Detay"><i class="fas fa-eye"></i> Detay</a>
+                            {# Admin/Personel için ek işlem butonları eklenebilir #}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        {# Pagination #}
+        {% if is_paginated %}
+        <nav aria-label="Page navigation example">
+            <ul class="pagination justify-content-center mt-4">
+                {% if page_obj.has_previous %}
+                    <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}">Önceki</a></li>
+                {% else %}
+                    <li class="page-item disabled"><span class="page-link">Önceki</span></li>
+                {% endif %}
+
+                {% for i in paginator.page_range %}
+                    {% if page_obj.number == i %}
+                        <li class="page-item active"><span class="page-link">{{ i }}</span></li>
+                    {% else %}
+                        <li class="page-item"><a class="page-link" href="?page={{ i }}">{{ i }}</a></li>
+                    {% endif %}
+                {% endfor %}
+
+                {% if page_obj.has_next %}
+                    <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}">Sonraki</a></li>
+                {% else %}
+                    <li class="page-item disabled"><span class="page-link">Sonraki</span></li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+
+        {% else %}
+        <div class="alert alert-info text-center" role="alert">
+            Henüz mesajınız bulunmamaktadır.
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

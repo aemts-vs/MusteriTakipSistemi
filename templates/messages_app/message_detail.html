@@ -1,0 +1,82 @@
+<!-- templates/messages_app/message_detail.html -->
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Mesaj Detayı: {{ message.subject }}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h3">Mesaj Detayı</h1>
+    <a href="{% url 'messages_app:message_list' %}" class="btn btn-secondary"><i class="fas fa-arrow-left"></i> Mesaj Listesine Dön</a>
+</div>
+
+<div class="card shadow-sm mb-4">
+    <div class="card-header bg-primary text-white">
+        Mesaj: {{ message.subject }}
+    </div>
+    <div class="card-body">
+        <p><strong>Gönderen:</strong> {{ message.sender.get_full_name|default:message.sender.username }}</p>
+        <p><strong>Mesaj Tipi:</strong> <span class="badge bg-secondary">{{ message.get_message_type_display }}</span></p>
+        <p><strong>Durum:</strong>
+            {% if message.status == 'new' %}
+                <span class="badge bg-info">{{ message.get_status_display }}</span>
+            {% elif message.status == 'read' %}
+                <span class="badge bg-primary">{{ message.get_status_display }}</span>
+            {% elif message.status == 'replied' %}
+                <span class="badge bg-success">{{ message.get_status_display }}</span>
+            {% else %}
+                <span class="badge bg-secondary">{{ message.get_status_display }}</span>
+            {% endif %}
+        </p>
+        {% if message.order %}
+            <p><strong>İlgili Sipariş:</strong> <a href="{% url 'orders:order_detail' pk=message.order.pk %}">{{ message.order.order_id }}</a></p>
+        {% endif %}
+        <p><strong>Gönderim Tarihi:</strong> {{ message.created_at|date:"d M Y H:i" }}</p>
+        <hr>
+        <p>{{ message.content|linebreaksbr }}</p>
+    </div>
+</div>
+
+<div class="card shadow-sm mb-4">
+    <div class="card-header bg-info text-white">
+        Yanıtlar
+    </div>
+    <div class="card-body">
+        {% if message.replies.all %}
+            {% for reply in message.replies.all %}
+            <div class="card mb-2">
+                <div class="card-body bg-light border rounded">
+                    <small class="text-muted"><strong>{{ reply.sender.get_full_name|default:reply.sender.username }}</strong> - {{ reply.created_at|date:"d M Y H:i" }}</small>
+                    <p class="mb-0 mt-2">{{ reply.content|linebreaksbr }}</p>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <p class="text-muted">Bu mesaja henüz yanıt verilmedi.</p>
+        {% endif %}
+    </div>
+</div>
+
+<div class="card shadow-sm">
+    <div class="card-header bg-success text-white">
+        Yanıt Ver
+    </div>
+    <div class="card-body">
+        <form method="post" action="{% url 'messages_app:message_reply' pk=message.pk %}">
+            {% csrf_token %}
+            {% for field in reply_form %}
+                <div class="mb-3">
+                    <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
+                    {{ field }}
+                    {% for error in field.errors %}
+                        <div class="text-danger">{{ error }}</div>
+                    {% endfor %}
+                </div>
+            {% endfor %}
+            <div class="d-grid mt-4">
+                <button type="submit" class="btn btn-success"><i class="fas fa-reply"></i> Yanıt Gönder</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

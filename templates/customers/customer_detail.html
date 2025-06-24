@@ -1,0 +1,70 @@
+<!-- templates/customers/customer_detail.html -->
+{% extends 'base.html' %}
+
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h3">Müşteri Detayları: {{ customer.get_full_name|default:customer.username }}</h1>
+    <div>
+        <a href="{% url 'customers:customer_edit' pk=customer.pk %}" class="btn btn-info me-2"><i class="fas fa-edit"></i> Bilgileri Düzenle</a>
+        {% if customer.is_active %}
+            <form action="{% url 'customers:customer_deactivate' pk=customer.pk %}" method="post" class="d-inline">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-warning" onclick="return confirm('Müşteriyi pasife almak istediğinizden emin misiniz? Bu işlem, müşterinin sisteme girişini ve paneline erişimini engelleyecektir.');"><i class="fas fa-user-slash"></i> Müşteriyi Pasife Al</button>
+            </form>
+        {% else %}
+            <form action="{% url 'customers:customer_activate' pk=customer.pk %}" method="post" class="d-inline">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-success" onclick="return confirm('Müşteriyi aktife almak istediğinizden emin misiniz?');"><i class="fas fa-user-plus"></i> Müşteriyi Aktif Et</button>
+            </form>
+        {% endif %}
+    </div>
+</div>
+
+<div class="card shadow-sm mb-4">
+    <div class="card-header bg-primary text-white">
+        Genel Bilgiler
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-6">
+                <p><strong>Adı Soyadı:</strong> {{ customer.get_full_name }}</p>
+                <p><strong>Kullanıcı Adı:</strong> {{ customer.username }}</p>
+                <p><strong>E-posta Adresi:</strong> {{ customer.email }}</p>
+                <p><strong>Telefon Numarası:</strong> {{ customer.phone_number|default:"Belirtilmemiş" }}</p>
+                <p><strong>Firma Adı:</strong> {{ customer.company_name|default:"Yok" }}</p>
+            </div>
+            <div class="col-md-6">
+                <p><strong>Müşteri Türü:</strong> {{ customer.get_customer_segment_display|default:"Bilinmiyor" }}</p>
+                <p><strong>Adres:</strong> {{ customer.address|linebreaksbr|default:"Belirtilmemiş" }}</p>
+                <p><strong>Doğum Tarihi:</strong> {{ customer.date_of_birth|date:"d M Y"|default:"Belirtilmemiş" }}</p>
+                <p><strong>Üyelik Tarihi:</strong> {{ customer.date_joined|date:"d M Y H:i" }}</p>
+                <p><strong>Durum:</strong>
+                    {% if customer.is_active %}
+                        <span class="badge bg-success">Aktif</span>
+                    {% else %}
+                        <span class="badge bg-danger">Pasif</span>
+                    {% endif %}
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card shadow-sm mb-4">
+    <div class="card-header bg-secondary text-white">
+        Ek Bilgiler
+    </div>
+    <div class="card-body">
+        <p><strong>Vergi/Kimlik Numarası:</strong> {{ customer.tax_id_number|default:"Belirtilmemiş" }}</p>
+        <p><strong>Ödeme Tercihi:</strong> {{ customer.payment_preference|default:"Belirtilmemiş" }}</p>
+        <p><strong>Borç Durumu:</strong> {{ customer.debt_status|floatformat:2 }} TL</p>
+        <p><strong>Notlar:</strong> {{ customer.notes|linebreaksbr|default:"Not yok" }}</p>
+    </div>
+</div>
+
+<div class="mt-4 text-center">
+    <a href="{% url 'customers:customer_list' %}" class="btn btn-outline-secondary"><i class="fas fa-arrow-left"></i> Müşteri Listesine Dön</a>
+</div>
+{% endblock %}

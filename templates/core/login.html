@@ -1,0 +1,51 @@
+<!-- templates/core/login.html -->
+{% extends 'base.html' %}
+{% load static %}
+{% load widget_tweaks %} {# <<<<<< BURAYA EKLENDİ #}
+
+{% block title %}Giriş Yap{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6 col-lg-4">
+        <div class="card mt-5">
+            <div class="card-header text-center">
+                <h3>Giriş Yap</h3>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    {% if form.errors %}
+                        <div class="alert alert-danger" role="alert">
+                            Kullanıcı adı veya şifre hatalı. Lütfen tekrar deneyin.
+                        </div>
+                    {% endif %}
+                    <div class="mb-3">
+                        <label for="{{ form.username.id_for_label }}" class="form-label">Kullanıcı Adı veya E-posta</label>
+                        {% render_field form.username class="form-control" %} {# <<<<<< BURAYA EKLENDİ #}
+                        {% if form.username.errors %}
+                            <div class="text-danger">{{ form.username.errors }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="mb-3">
+                        <label for="{{ form.password.id_for_label }}" class="form-label">Şifre</label>
+                        {% render_field form.password class="form-control" %} {# <<<<<< BURAYA EKLENDİ #}
+                        {% if form.password.errors %}
+                            <div class="text-danger">{{ form.password.errors }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary">Giriş Yap</button>
+                    </div>
+                </form>
+                <div class="text-center mt-3">
+                    <a href="{% url 'password_reset' %}" class="btn btn-link">Şifremi Unuttum</a>
+                </div>
+                <div class="text-center mt-2">
+                    Hesabınız yok mu? <a href="{% url 'register' %}">Üye Ol</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

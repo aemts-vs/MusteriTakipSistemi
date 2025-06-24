@@ -1,0 +1,71 @@
+<!-- templates/stock/product_detail.html -->
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Ürün Detayları: {{ product.name }}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h3">Ürün Detayları: {{ product.name }}</h1>
+    <div>
+        <a href="{% url 'stock:product_update' pk=product.pk %}" class="btn btn-info me-2"><i class="fas fa-edit"></i> Ürünü Düzenle</a>
+        {% if product.is_active %}
+            <form action="{% url 'stock:product_deactivate' pk=product.pk %}" method="post" class="d-inline">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-warning" onclick="return confirm('Ürünü pasife almak istediğinizden emin misiniz? Bu ürün satışlarda görünmeyecektir.');"><i class="fas fa-ban"></i> Ürünü Pasife Al</button>
+            </form>
+        {% else %}
+            <form action="{% url 'stock:product_activate' pk=product.pk %}" method="post" class="d-inline">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-success" onclick="return confirm('Ürünü aktife almak istediğinizden emin misiniz?');"><i class="fas fa-check-circle"></i> Ürünü Aktif Et</button>
+            </form>
+        {% endif %}
+        <a href="{% url 'stock:product_delete' pk=product.pk %}" class="btn btn-danger ms-2" onclick="return confirm('Ürünü kalıcı olarak silmek istediğinizden emin misiniz?');"><i class="fas fa-trash"></i> Ürünü Sil</a>
+    </div>
+</div>
+
+<div class="card shadow-sm mb-4">
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-4 text-center">
+                {% if product.image %}
+                    <img src="{{ product.image.url }}" class="img-fluid rounded" alt="{{ product.name }}" style="max-height: 250px; object-fit: contain;">
+                {% else %}
+                    <i class="fas fa-box-open fa-5x text-muted mb-3"></i>
+                    <p class="text-muted">Görsel yok</p>
+                {% endif %}
+            </div>
+            <div class="col-md-8">
+                <p><strong>Ürün Kodu:</strong> {{ product.product_code }}</p>
+                <p><strong>Ürün Adı:</strong> {{ product.name }}</p>
+                <p><strong>Kategori:</strong> {{ product.category.name|default:"Yok" }}</p>
+                <p><strong>Açıklama:</strong> {{ product.description|linebreaksbr|default:"Yok" }}</p>
+                <p><strong>Mevcut Stok:</strong>
+                    {% if product.is_low_stock %}
+                        <span class="badge bg-danger">{{ product.current_stock }} / {{ product.minimum_stock }} (Düşük Stok!)</span>
+                    {% else %}
+                        <span class="badge bg-success">{{ product.current_stock }}</span>
+                    {% endif %}
+                </p>
+                <p><strong>Depo Konumu:</strong> {{ product.warehouse_location.name|default:"Belirtilmemiş" }} ({{ product.warehouse_location.address|default:"" }})</p>
+                <p><strong>Birim Maliyet:</strong> {{ product.unit_cost|floatformat:2 }} TL</p>
+                <p><strong>Satış Fiyatı:</strong> {{ product.selling_price|floatformat:2 }} TL</p>
+                <p><strong>Ana Tedarikçi:</strong> {{ product.main_supplier.name|default:"Yok" }} ({{ product.main_supplier.phone_number|default:"" }})</p>
+                <p><strong>Durum:</strong>
+                    {% if product.is_active %}
+                        <span class="badge bg-success">Aktif</span>
+                    {% else %}
+                        <span class="badge bg-danger">Pasif</span>
+                    {% endif %}
+                </p>
+                <p><strong>Oluşturulma Tarihi:</strong> {{ product.created_at|date:"d M Y H:i" }}</p>
+                <p><strong>Güncellenme Tarihi:</strong> {{ product.updated_at|date:"d M Y H:i" }}</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="mt-4 text-center">
+    <a href="{% url 'stock:product_list' %}" class="btn btn-outline-secondary"><i class="fas fa-arrow-left"></i> Ürün Listesine Dön</a>
+</div>
+{% endblock %}

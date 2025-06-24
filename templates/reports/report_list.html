@@ -1,0 +1,118 @@
+<!-- templates/reports/report_list.html -->
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Raporlama{% endblock %}
+
+{% block content %}
+<h1 class="h3 mb-4">{{ page_title }}</h1>
+
+<div class="row">
+    <div class="col-md-6 mb-4">
+        <div class="card shadow-sm h-100">
+            <div class="card-header bg-primary text-white">
+                Aylara Göre Sipariş Sayısı
+            </div>
+            <div class="card-body">
+                <canvas id="monthlyOrdersChart"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6 mb-4">
+        <div class="card shadow-sm h-100">
+            <div class="card-header bg-success text-white">
+                En Çok Satan Ürünler (Miktar)
+            </div>
+            <div class="card-body">
+                <canvas id="topSellingProductsChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Aylara Göre Sipariş Sayısı Grafiği
+        const monthlyOrdersCtx = document.getElementById('monthlyOrdersChart').getContext('2d');
+        new Chart(monthlyOrdersCtx, {
+            type: 'bar', // Çubuk grafik
+            data: {
+                labels: JSON.parse('{{ monthly_order_labels|safe }}'), // Python listesini JS array'e çevir
+                datasets: [{
+                    label: 'Sipariş Sayısı',
+                    data: JSON.parse('{{ monthly_order_data|safe }}'), // Python listesini JS array'e çevir
+                    backgroundColor: 'rgba(54, 162, 235, 0.8)',
+                    borderColor: 'rgba(54, 162, 235, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'Sipariş Sayısı'
+                        }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    title: {
+                        display: true,
+                        text: 'Aylık Sipariş Performansı'
+                    }
+                }
+            }
+        });
+
+        // En Çok Satan Ürünler Grafiği
+        const topSellingProductsCtx = document.getElementById('topSellingProductsChart').getContext('2d');
+        new Chart(topSellingProductsCtx, {
+            type: 'pie', // Pasta grafik
+            data: {
+                labels: JSON.parse('{{ top_product_labels|safe }}'),
+                datasets: [{
+                    label: 'Satılan Miktar',
+                    data: JSON.parse('{{ top_product_data|safe }}'),
+                    backgroundColor: [
+                        'rgba(255, 99, 132, 0.8)', // Kırmızı
+                        'rgba(54, 162, 235, 0.8)', // Mavi
+                        'rgba(255, 206, 86, 0.8)', // Sarı
+                        'rgba(75, 192, 192, 0.8)', // Yeşil
+                        'rgba(153, 102, 255, 0.8)' // Mor
+                    ],
+                    borderColor: [
+                        'rgba(255, 99, 132, 1)',
+                        'rgba(54, 162, 235, 1)',
+                        'rgba(255, 206, 86, 1)',
+                        'rgba(75, 192, 192, 1)',
+                        'rgba(153, 102, 255, 1)'
+                    ],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                    },
+                    title: {
+                        display: true,
+                        text: 'En Çok Satan Ürünler'
+                    }
+                }
+            }
+        });
+    });
+</script>
+{% endblock %}

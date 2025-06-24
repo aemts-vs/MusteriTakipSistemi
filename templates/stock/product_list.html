@@ -1,0 +1,143 @@
+<!-- templates/stock/product_list.html -->
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Ürün Listesi{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap">
+        <h1 class="h3 mb-2 mb-md-0">Ürün Listesi</h1>
+        
+        <div class="d-flex flex-wrap">
+            <!-- Yeni Ürün Ekle Butonu -->
+            <a href="{% url 'stock:product_create' %}" class="btn btn-primary me-2 mb-2"><i class="fas fa-plus-circle"></i> Yeni Ürün Ekle</a>
+            
+            <!-- Durum Filtresi Dropdown -->
+            <div class="btn-group me-2 mb-2">
+                <button type="button" class="btn btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                    Durum: {% if current_status_filter == 'active' %}Aktif{% elif current_status_filter == 'inactive' %}Pasif{% else %}Tümü{% endif %}
+                </button>
+                <ul class="dropdown-menu">
+                    <!-- Filtre linkleri view'a GET parametresi gönderir -->
+                    <li><a class="dropdown-item {% if current_status_filter == 'all' %}active{% endif %}" href="{% url 'stock:product_list' %}?status=all">Tüm Ürünler</a></li>
+                    <li><a class="dropdown-item {% if current_status_filter == 'active' %}active{% endif %}" href="{% url 'stock:product_list' %}?status=active">Aktif Ürünler</a></li>
+                    <li><a class="dropdown-item {% if current_status_filter == 'inactive' %}active{% endif %}" href="{% url 'stock:product_list' %}?status=inactive">Pasif Ürünler</a></li>
+                </ul>
+            </div>
+
+            <!-- Diğer Stok İşlemleri Dropdown -->
+            <div class="btn-group mb-2">
+                <button type="button" class="btn btn-secondary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                    <i class="fas fa-bars"></i> Diğer İşlemler
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end">
+                    <li><a class="dropdown-item" href="{% url 'stock:category_list' %}">Kategori Yönetimi</a></li>
+                    <li><a class="dropdown-item" href="{% url 'stock:supplier_list' %}">Tedarikçi Yönetimi</a></li>
+                    <li><a class="dropdown-item" href="{% url 'stock:warehouse_list' %}">Depo Yönetimi</a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Ürün Tablosu -->
+    <div class="card shadow-sm">
+        <div class="card-body">
+            {% if products %}
+            <div class="table-responsive">
+                <table class="table table-hover table-striped align-middle">
+                    <thead>
+                        <tr>
+                            <th scope="col">Görsel</th>
+                            <th scope="col">Ürün Kodu</th>
+                            <th scope="col">Ürün Adı</th>
+                            <th scope="col">Kategori</th>
+                            <th scope="col">Stok / Kritik Stok</th>
+                            <th scope="col">Satış Fiyatı</th>
+                            <th scope="col">Tedarikçi</th>
+                            <th scope="col">Durum</th>
+                            <th scope="col" class="text-end">İşlemler</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for product in products %}
+                        <tr>
+                            <td>
+                                {% if product.image %}
+                                    <img src="{{ product.image.url }}" alt="{{ product.name }}" style="width: 75px; height: 75px; object-fit: cover; border-radius: 5px;">
+                                {% else %}
+                                    <i class="fas fa-box-open fa-2x text-muted"></i>
+                                {% endif %}
+                            </td>
+                            <td><code>{{ product.product_code }}</code></td>
+                            <td><a href="{% url 'stock:product_detail' pk=product.pk %}">{{ product.name }}</a></td>
+                            <td>{{ product.category.name|default:"-" }}</td>
+                            <td>
+                                {% if product.is_low_stock %}
+                                    <span class="badge bg-danger" title="Stok kritik seviyede!">{{ product.current_stock }} / {{ product.minimum_stock }}</span>
+                                {% else %}
+                                    <span class="badge bg-success">{{ product.current_stock }}</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ product.selling_price|floatformat:2 }} TL</td>
+                            <td>{{ product.main_supplier.name|default:"-" }}</td>
+                            <td>
+                                {% if product.is_active %}
+                                    <span class="badge bg-success">Aktif</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">Pasif</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-end">
+                                <a href="{% url 'stock:product_update' pk=product.pk %}" class="btn btn-sm btn-info me-1" title="Düzenle"><i class="fas fa-edit"></i></a>
+                                <a href="{% url 'stock:product_detail' pk=product.pk %}" class="btn btn-sm btn-secondary me-1" title="Detay"><i class="fas fa-eye"></i></a>
+                                {% if product.is_active %}
+                                    <form action="{% url 'stock:product_deactivate' pk=product.pk %}" method="post" class="d-inline">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-sm btn-warning" title="Pasife Al" onclick="return confirm('Ürünü pasife almak istediğinizden emin misiniz? Bu ürün satışlarda görünmeyecektir.');"><i class="fas fa-ban"></i></button>
+                                    </form>
+                                {% else %}
+                                    <form action="{% url 'stock:product_activate' pk=product.pk %}" method="post" class="d-inline">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-sm btn-success" title="Aktif Et" onclick="return confirm('Ürünü aktife almak istediğinizden emin misiniz?');"><i class="fas fa-check-circle"></i></button>
+                                    </form>
+                                {% endif %}
+                                <a href="{% url 'stock:product_delete' pk=product.pk %}" class="btn btn-sm btn-danger ms-1" title="Sil" onclick="return confirm('Bu ürünü kalıcı olarak silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.');"><i class="fas fa-trash"></i></a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Sayfalama (Pagination) -->
+            {% if is_paginated %}
+            <nav aria-label="Sayfalama" class="mt-4">
+                <ul class="pagination justify-content-center">
+                    {% if page_obj.has_previous %}
+                        <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}&status={{ current_status_filter }}">Önceki</a></li>
+                    {% else %}
+                        <li class="page-item disabled"><span class="page-link">Önceki</span></li>
+                    {% endif %}
+                    {% for i in paginator.page_range %}
+                        <li class="page-item {% if page_obj.number == i %}active{% endif %}"><a class="page-link" href="?page={{ i }}&status={{ current_status_filter }}">{{ i }}</a></li>
+                    {% endfor %}
+                    {% if page_obj.has_next %}
+                        <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}&status={{ current_status_filter }}">Sonraki</a></li>
+                    {% else %}
+                        <li class="page-item disabled"><span class="page-link">Sonraki</span></li>
+                    {% endif %}
+                </ul>
+            </nav>
+            {% endif %}
+
+            {% else %}
+            <!-- Kayıtlı Ürün Yoksa Gösterilecek Mesaj -->
+            <div class="alert alert-info text-center" role="alert">
+                Filtre kriterlerine uygun ürün bulunamadı veya henüz hiç ürün eklenmedi.
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

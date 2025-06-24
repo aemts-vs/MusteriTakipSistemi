@@ -1,0 +1,144 @@
+<!-- templates/dashboard/admin_dashboard.html -->
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Yönetici Paneli - Dashboard{% endblock %}
+
+{% block content %}
+<h1 class="h3 mb-4">{{ page_title }}</h1>
+
+<div class="row">
+    {# Toplam Müşteri Kartı #}
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-left-primary shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col me-2">
+                        <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                            Toplam Müşteri
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">{{ total_customers }}</div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-users fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {# Aktif Siparişler Kartı #}
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-left-success shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col me-2">
+                        <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                            Aktif Siparişler
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">{{ active_orders_count }}</div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-shopping-bag fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {# Son 7 Gün Ciro Kartı #}
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-left-info shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col me-2">
+                        <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                            Son 7 Gün Ciro
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">{{ last_7_days_revenue|floatformat:2 }} TL</div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-dollar-sign fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {# Düşük Stoklu Ürünler Kartı #}
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-left-warning shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col me-2">
+                        <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                            Düşük Stoklu Ürünler
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">{{ low_stock_products_count }}</div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-exclamation-triangle fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{# Son Siparişler Tablosu #}
+<div class="card shadow mb-4">
+    <div class="card-header py-3 bg-dark text-white">
+        <h6 class="m-0 font-weight-bold">Son Siparişler</h6>
+    </div>
+    <div class="card-body">
+        {% if latest_orders %}
+        <div class="table-responsive">
+            <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
+                <thead>
+                    <tr>
+                        <th>Sipariş No</th>
+                        <th>Müşteri</th>
+                        <th>Tarih</th>
+                        <th>Tutar</th>
+                        <th>Durum</th>
+                        <th>İşlemler</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for order in latest_orders %}
+                    <tr>
+                        <td><a href="{% url 'orders:order_detail' pk=order.pk %}">{{ order.order_id }}</a></td>
+                        <td>{{ order.customer.get_full_name|default:order.customer.username|default:"Misafir" }}</td>
+                        <td>{{ order.order_date|date:"d M Y H:i" }}</td>
+                        <td>{{ order.total_amount|floatformat:2 }} TL</td>
+                        <td>
+                            {% if order.order_status == 'new' %}
+                                <span class="badge bg-info">{{ order.get_order_status_display }}</span>
+                            {% elif order.order_status == 'accepted' %}
+                                <span class="badge bg-primary">{{ order.get_order_status_display }}</span>
+                            {% elif order.order_status == 'shipped' %}
+                                <span class="badge bg-warning">{{ order.get_order_status_display }}</span>
+                            {% elif order.order_status == 'delivered' %}
+                                <span class="badge bg-success">{{ order.get_order_status_display }}</span>
+                            {% elif order.order_status == 'cancelled' or order.order_status == 'returned' %}
+                                <span class="badge bg-danger">{{ order.get_order_status_display }}</span>
+                            {% else %}
+                                <span class="badge bg-secondary">{{ order.get_order_status_display }}</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <a href="{% url 'orders:order_detail' pk=order.pk %}" class="btn btn-sm btn-secondary" title="Detay"><i class="fas fa-eye"></i></a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="alert alert-info text-center" role="alert">
+            Henüz sipariş bulunmamaktadır.
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

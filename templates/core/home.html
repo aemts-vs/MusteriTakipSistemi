@@ -1,0 +1,59 @@
+<!-- templates/core/home.html -->
+{% extends 'base.html' %}
+
+{% block title %}Ana Sayfa{% endblock %}
+
+{% block content %}
+<div class="p-5 mb-4 bg-light rounded-3">
+    <div class="container-fluid py-5 text-center">
+        <h1 class="display-5 fw-bold">Müşteri Takip Sistemine Hoş Geldiniz!</h1>
+        <p class="col-md-8 fs-4 mx-auto">Müşteri, sipariş ve stok yönetimi çözümleriniz için tek adres.</p>
+        {% if not user.is_authenticated %}
+            <a href="{% url 'login' %}" class="btn btn-primary btn-lg me-2">Giriş Yap</a>
+            <a href="{% url 'register' %}" class="btn btn-outline-secondary btn-lg">Üye Ol</a>
+        {% else %}
+            <p class="fs-4 mt-4">Giriş yaptınız: <strong>{{ user.get_full_name|default:user.username }}</strong> ({{ user.get_user_type_display }})</p>
+            {% if user.is_admin %}
+                <p>Yönetici paneline erişiminiz var. <a href="{% url 'dashboard:admin_dashboard' %}">Dashboard'a Git</a></p>
+            {% elif user.is_personnel %}
+                <p>Personel olarak siparişleri ve müşterileri yönetebilirsiniz. <a href="#">Siparişleri Görüntüle</a></p> {# {% url 'orders:order_list' %} #}
+            {% elif user.is_customer %}
+                <p>Müşteri panelinize hoş geldiniz. <a href="{% url 'customer_panel:customer_dashboard' %}">Paneline Git</a></p>
+            {% endif %}
+        {% endif %}
+    </div>
+</div>
+
+<div class="row align-items-md-stretch">
+    <div class="col-md-6">
+        <div class="h-100 p-5 text-bg-dark rounded-3">
+            <h2>Müşterilerinizi Yönetin</h2>
+            <p>Tüm müşteri bilgilerinizi tek bir yerden kolayca takip edin, düzenleyin ve yönetin.</p>
+            {% if user.is_authenticated %}
+                {% if user.is_personnel or user.is_admin %}
+                    <a href="{% url 'customers:customer_list' %}" class="btn btn-outline-light">Müşteri Listesi</a>
+                {% else %}
+                    <button class="btn btn-outline-light" type="button" disabled>Yetkiniz Yok</button>
+                {% endif %}
+            {% else %}
+                <button class="btn btn-outline-light" type="button" disabled>Giriş Yapın</button>
+            {% endif %}
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="h-100 p-5 bg-light border rounded-3">
+            <h2>Siparişlerinizi Takip Edin</h2>
+            <p>Müşterilerinizin verdiği tüm siparişleri anlık olarak görün ve durumlarını güncelleyin.</p>
+            {% if user.is_authenticated %}
+                {% if user.is_personnel or user.is_admin %}
+                    <a href="#" class="btn btn-outline-secondary">Sipariş Listesi</a> {# {% url 'orders:order_list' %} #}
+                {% else %}
+                    <button class="btn btn-outline-secondary" type="button" disabled>Yetkiniz Yok</button>
+                {% endif %}
+            {% else %}
+                <button class="btn btn-outline-secondary" type="button" disabled>Giriş Yapın</button>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

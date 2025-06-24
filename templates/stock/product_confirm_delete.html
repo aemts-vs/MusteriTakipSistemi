@@ -1,0 +1,27 @@
+<!-- templates/stock/product_confirm_delete.html -->
+{% extends 'base.html' %}
+
+{% block title %}Ürünü Sil{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card mt-5">
+            <div class="card-header bg-danger text-white">
+                <h3>Ürünü Sil</h3>
+            </div>
+            <div class="card-body">
+                <p class="lead"><strong>"{{ product.name }}"</strong> adlı ürünü kalıcı olarak silmek istediğinizden emin misiniz?</p>
+                <p class="text-danger">Bu işlem geri alınamaz.</p>
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-center">
+                        <button type="submit" class="btn btn-danger btn-lg me-md-2"><i class="fas fa-trash"></i> Evet, Sil</button>
+                        <a href="{% url 'stock:product_detail' pk=product.pk %}" class="btn btn-secondary btn-lg"><i class="fas fa-times"></i> Hayır, İptal</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

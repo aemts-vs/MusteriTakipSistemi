@@ -1,0 +1,159 @@
+<!-- templates/orders/order_detail.html -->
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h3">{{ page_title }}</h1>
+    <div>
+        <a href="{% url 'orders:order_update' pk=order.pk %}" class="btn btn-info me-2"><i class="fas fa-edit"></i> Siparişi Düzenle</a>
+        {% if order.order_status == 'new' %}
+            <form action="{% url 'orders:order_accept' pk=order.pk %}" method="post" class="d-inline">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-success me-2" onclick="return confirm('Siparişi kabul etmek istediğinizden emin misiniz? Durumu \'Kabul Edildi / Hazırlanıyor\' olarak değişecektir.');"><i class="fas fa-check"></i> Kabul Et</button>
+            </form>
+        {% elif order.order_status == 'accepted' %}
+            <form action="{% url 'orders:order_mark_shipped' pk=order.pk %}" method="post" class="d-inline">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-warning me-2" onclick="return confirm('Siparişi kargoya verildi olarak işaretlemek istediğinizden emin misiniz?');"><i class="fas fa-truck"></i> Kargoya Ver</button>
+            </form>
+        {% elif order.order_status == 'shipped' %}
+            <form action="{% url 'orders:order_mark_delivered' pk=order.pk %}" method="post" class="d-inline">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-success me-2" onclick="return confirm('Siparişi teslim edildi olarak işaretlemek istediğinizden emin misiniz?');"><i class="fas fa-box"></i> Teslim Edildi</button>
+            </form>
+        {% endif %}
+        
+        {# Bu kısım, henüz teslim edilmemiş, iade edilmemiş, iptal edilmemiş veya pasif olmayan siparişleri iptal etme butonu #}
+        {% if order.order_status != 'delivered' and order.order_status != 'returned' and order.order_status != 'cancelled' and order.order_status != 'passive' %}
+            <form action="{% url 'orders:order_mark_cancelled' pk=order.pk %}" method="post" class="d-inline">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-danger me-2" onclick="return confirm('Siparişi iptal etmek istediğinizden emin misiniz? Ürünler stoğa geri eklenecektir.');"><i class="fas fa-times-circle"></i> İptal Et</button>
+            </form>
+        {% endif %}
+
+        {# Bu kısım, teslim edilmiş veya kargoya verilmiş siparişleri iade etme butonu #}
+        {% if order.order_status == 'delivered' or order.order_status == 'shipped' %}
+            <form action="{% url 'orders:order_mark_returned' pk=order.pk %}" method="post" class="d-inline">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-secondary me-2" onclick="return confirm('Siparişi iade edildi olarak işaretlemek istediğinizden emin misiniz? Ürünler stoğa geri eklenecektir.');"><i class="fas fa-undo"></i> Iade Et</button>
+            </form>
+        {% endif %}
+        
+        {# Bu kısım, siparişi pasife alma butonu (sadece yönetici ve pasif değilse) #}
+        {% if order.order_status != 'passive' and user.is_admin %}
+            <form action="{% url 'orders:order_mark_passive' pk=order.pk %}" method="post" class="d-inline">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-warning ms-2" onclick="return confirm('Siparişi pasife almak istediğinizden emin misiniz? Müşteri panelinden kaldırılacaktır.');"><i class="fas fa-archive"></i> Pasife Al</button>
+            </form>
+        {% endif %}
+        {# Siparişi silme butonu (genellikle sadece admin içindir ve dikkatli kullanılmalıdır) #}
+        <a href="{% url 'orders:order_delete' pk=order.pk %}" class="btn btn-danger ms-2" onclick="return confirm('Siparişi kalıcı olarak silmek istediğinizden emin misiniz? Ürünler stoğa geri eklenecektir.');"><i class="fas fa-trash"></i> Sil</a>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-primary text-white">
+                Sipariş Bilgileri
+            </div>
+            <div class="card-body">
+                <p><strong>Sipariş Numarası:</strong> {{ order.order_id }}</p>
+                <p><strong>Müşteri:</strong> {{ order.customer.get_full_name|default:order.customer.username|default:"Misafir" }}</p>
+                <p><strong>Sipariş Tarihi:</strong> {{ order.order_date|date:"d M Y H:i" }}</p>
+                <p><strong>Sipariş Durumu:</strong>
+                    {% if order.order_status == 'new' %}
+                        <span class="badge bg-info">{{ order.get_order_status_display }}</span>
+                    {% elif order.order_status == 'accepted' %}
+                        <span class="badge bg-primary">{{ order.get_order_status_display }}</span>
+                    {% elif order.order_status == 'shipped' %}
+                        <span class="badge bg-warning">{{ order.get_order_status_display }}</span>
+                    {% elif order.order_status == 'delivered' %}
+                        <span class="badge bg-success">{{ order.get_order_status_display }}</span>
+                    {% elif order.order_status == 'cancelled' or order.order_status == 'returned' %}
+                        <span class="badge bg-danger">{{ order.get_order_status_display }}</span>
+                    {% else %}
+                        <span class="badge bg-secondary">{{ order.get_order_status_display }}</span>
+                    {% endif %}
+                </p>
+                <p><strong>Sipariş Tamamlandı mı?:</strong>
+                    {% if order.is_completed %}
+                        <span class="badge bg-success">Evet</span>
+                    {% else %}
+                        <span class="badge bg-warning">Hayır</span>
+                    {% endif %}
+                </p>
+                <p><strong>Notlar:</strong> {{ order.notes|linebreaksbr|default:"Yok" }}</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-success text-white">
+                Ödeme ve Teslimat Bilgileri
+            </div>
+            <div class="card-body">
+                <p><strong>Ödeme Durumu:</strong>
+                    {% if order.payment_status == 'paid' %}
+                        <span class="badge bg-success">{{ order.get_payment_status_display }}</span>
+                    {% elif order.payment_status == 'pending' %}
+                        <span class="badge bg-warning">{{ order.get_payment_status_display }}</span>
+                    {% else %}
+                        <span class="badge bg-secondary">{{ order.get_payment_status_display }}</span>
+                    {% endif %}
+                </p>
+                <p><strong>Ödeme Yöntemi:</strong> {{ order.get_payment_method_display|default:"Belirtilmemiş" }}</p>
+                <p><strong>Toplam Tutar:</strong> {{ order.total_amount|floatformat:2 }} TL</p>
+                <p><strong>İndirim Kodu:</strong> {{ order.discount_code|default:"Yok" }}</p>
+                <p><strong>İndirim Tutarı:</strong> {{ order.discount_amount|floatformat:2 }} TL</p>
+                <hr>
+                <p><strong>Teslimat Adresi:</strong> {{ order.delivery_address|linebreaksbr }}</p>
+                <p><strong>Kargo Firması:</strong> {{ order.shipping_company|default:"Belirtilmemiş" }}</p>
+                <p><strong>Takip Numarası:</strong> {{ order.tracking_number|default:"Yok" }}</p>
+                <p><strong>Tahmini Teslimat Tarihi:</strong> {{ order.estimated_delivery_date|date:"d M Y"|default:"Belirtilmemiş" }}</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card shadow-sm mb-4">
+    <div class="card-header bg-info text-white">
+        Sipariş Edilen Ürünler
+    </div>
+    <div class="card-body">
+        {% if order.items.all %}
+        <div class="table-responsive">
+            <table class="table table-bordered table-hover">
+                <thead>
+                    <tr>
+                        <th scope="col">Ürün Adı</th>
+                        <th scope="col">Miktar</th>
+                        <th scope="col">Birim Fiyatı</th>
+                        <th scope="col">Toplam Ürün Fiyatı</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in order.items.all %}
+                    <tr>
+                        <td>{{ item.product.name|default:"Silinmiş Ürün" }} ({{ item.product.product_code|default:"-" }})</td>
+                        <td>{{ item.quantity }}</td>
+                        <td>{{ item.unit_price|floatformat:2 }} TL</td>
+                        <td>{{ item.total_price|floatformat:2 }} TL</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <p class="text-muted">Bu siparişe ait ürün bulunmamaktadır.</p>
+        {% endif %}
+    </div>
+</div>
+
+<div class="mt-4 text-center">
+    <a href="{% url 'orders:order_list' %}" class="btn btn-outline-secondary"><i class="fas fa-arrow-left"></i> Sipariş Listesine Dön</a>
+</div>
+{% endblock %}

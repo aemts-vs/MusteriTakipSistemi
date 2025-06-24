@@ -1,0 +1,78 @@
+<!-- templates/stock/warehouse_list.html -->
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Depo Listesi{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h3">Depo Listesi</h1>
+    <a href="{% url 'stock:warehouse_create' %}" class="btn btn-primary"><i class="fas fa-plus-circle"></i> Yeni Depo Ekle</a>
+</div>
+
+<div class="card shadow-sm">
+    <div class="card-body">
+        {% if warehouses %}
+        <div class="table-responsive">
+            <table class="table table-hover table-striped">
+                <thead>
+                    <tr>
+                        <th scope="col">ID</th>
+                        <th scope="col">Depo Adı</th>
+                        <th scope="col">Depo Adresi</th>
+                        <th scope="col">Açıklama</th>
+                        <th scope="col">İşlemler</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for warehouse in warehouses %}
+                    <tr>
+                        <td>{{ warehouse.pk }}</td>
+                        <td>{{ warehouse.name }}</td>
+                        <td>{{ warehouse.address|default:"-" }}</td>
+                        <td>{{ warehouse.description|default:"-" }}</td>
+                        <td>
+                            <a href="{% url 'stock:warehouse_update' pk=warehouse.pk %}" class="btn btn-sm btn-info me-1" title="Düzenle"><i class="fas fa-edit"></i></a>
+                            <a href="{% url 'stock:warehouse_delete' pk=warehouse.pk %}" class="btn btn-sm btn-danger" title="Sil"><i class="fas fa-trash"></i></a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        {# Pagination #}
+        {% if is_paginated %}
+        <nav aria-label="Page navigation example">
+            <ul class="pagination justify-content-center mt-4">
+                {% if page_obj.has_previous %}
+                    <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}">Önceki</a></li>
+                {% else %}
+                    <li class="page-item disabled"><span class="page-link">Önceki</span></li>
+                {% endif %}
+
+                {% for i in paginator.page_range %}
+                    {% if page_obj.number == i %}
+                        <li class="page-item active"><span class="page-link">{{ i }}</span></li>
+                    {% else %}
+                        <li class="page-item"><a class="page-link" href="?page={{ i }}">{{ i }}</a></li>
+                    {% endif %}
+                {% endfor %}
+
+                {% if page_obj.has_next %}
+                    <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}">Sonraki</a></li>
+                {% else %}
+                    <li class="page-item disabled"><span class="page-link">Sonraki</span></li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+
+        {% else %}
+        <div class="alert alert-info text-center" role="alert">
+            Henüz kayıtlı depo bulunmamaktadır.
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

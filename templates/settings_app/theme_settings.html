@@ -1,0 +1,165 @@
+<!-- templates/settings_app/theme_settings.html -->
+{% extends 'base.html' %}
+{% load static %}
+{% load widget_tweaks %} {# <<<<<< BURAYA EKLENDİ #}
+
+{% block title %}Tema Ayarları{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card mt-5">
+            <div class="card-header">
+                <h3>Tema ve Görünüm Ayarları</h3>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    {% for field in form %}
+                        <div class="mb-3">
+                            <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
+                            {# widget_tweaks kullanarak form kontrol sınıfını ekle #}
+                            {% if field.field.widget.input_type == 'radio' %}
+                                <div class="form-check">
+                                    {% for radio in field %}
+                                        {% render_field radio class="form-check-input" %}
+                                        <label class="form-check-label" for="{{ radio.id_for_label }}">{{ radio.data.label }}</label><br>
+                                    {% endfor %}
+                                </div>
+                            {% elif field.field.widget.input_type == 'select' %}
+                                {% render_field field class="form-select" %}
+                            {% else %}
+                                {% render_field field class="form-control" %}
+                            {% endif %}
+                            
+                            {% if field.help_text %}
+                                <div class="form-text text-muted">{{ field.help_text }}</div>
+                            {% endif %}
+                            {% for error in field.errors %}
+                                <div class="text-danger">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                    {% endfor %}
+                    <div class="d-grid mt-4">
+                        <button type="submit" class="btn btn-primary">Ayarları Kaydet</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Tema seçimi değiştiğinde anında önizleme yapmak için (isteğe bağlı)
+        const themeRadios = document.querySelectorAll('input[name="theme"]');
+        themeRadios.forEach(radio => {
+            radio.addEventListener('change', function() {
+                // Vücut sınıfını güncelleyerek tema stilini uygula
+                document.body.className = ''; // Tüm mevcut tema sınıflarını temizle
+                document.body.classList.add(this.value + '-theme'); 
+            });
+        });
+
+        // Navbar konumunu değiştirmek için (basit bir örnek)
+        const navbarPositionRadios = document.querySelectorAll('input[name="navbar_position"]');
+        navbarPositionRadios.forEach(radio => {
+            radio.addEventListener('change', function() {
+                console.log('Navbar konumu seçildi: ' + this.value);
+            });
+        });
+
+        // Sayfa ilk açıldığında kaydedilmiş temayı yükle
+        const savedTheme = document.querySelector('input[name="theme"]:checked')?.value;
+        if (savedTheme) {
+            document.body.classList.add(savedTheme + '-theme');
+        }
+    });
+</script>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* TEMEL TEMA STİLLERİ (Örnek - daha kapsamlı CSS dosyalarında olmalı) */
+    /* Light Theme (Varsayılan Bootstrap) */
+    .light-theme body {
+        background-color: #f8f9fa; /* Açık gri */
+        color: #212529; /* Koyu metin */
+    }
+    .light-theme .navbar {
+        background-color: #343a40 !important; /* Koyu navbar */
+        color: white;
+    }
+
+    /* Dark Theme */
+    .dark-theme body {
+        background-color: #343a40; /* Koyu gri */
+        color: #f8f9fa; /* Açık metin */
+    }
+    .dark-theme .navbar {
+        background-color: #212529 !important; /* Daha koyu navbar */
+        color: white;
+    }
+    .dark-theme .card {
+        background-color: #454d55; /* Koyu kart */
+        color: #f8f9fa;
+        border-color: #6c757d;
+    }
+    .dark-theme .card-header {
+        background-color: #5a6268 !important;
+        color: #f8f9fa !important;
+    }
+    .dark-theme .table {
+        color: #f8f9fa;
+    }
+    .dark-theme .table-hover tbody tr:hover {
+        background-color: rgba(255,255,255,0.1) !important;
+    }
+    .dark-theme .form-control, .dark-theme .form-select {
+        background-color: #5a6268;
+        color: #f8f9fa;
+        border-color: #6c757d;
+    }
+    .dark-theme .form-control:focus, .dark-theme .form-select:focus {
+        background-color: #5a6268;
+        color: #f8f9fa;
+        border-color: #888;
+    }
+    .dark-theme .text-muted {
+        color: #ced4da !important;
+    }
+
+    /* Blue Theme */
+    .blue-theme body {
+        background-color: #e0f2f7; /* Çok açık mavi */
+        color: #212529;
+    }
+    .blue-theme .navbar {
+        background-color: #007bff !important; /* Mavi navbar */
+        color: white;
+    }
+    .blue-theme .card-header.bg-primary {
+        background-color: #0056b3 !important; /* Koyu mavi */
+    }
+    /* Green Theme */
+    .green-theme body {
+        background-color: #e6ffe6; /* Çok açık yeşil */
+        color: #212529;
+    }
+    .green-theme .navbar {
+        background-color: #28a745 !important; /* Yeşil navbar */
+        color: white;
+    }
+    .green-theme .card-header.bg-primary {
+        background-color: #1e7e34 !important; /* Koyu yeşil */
+    }
+
+    /* Navbar Konumu - Sidebar için ekstra CSS ve HTML yapısı gerekir */
+    /* Bu sadece bir placeholder örneğidir, gerçek sidebar için kompleks CSS/JS şarttır */
+    .side-navbar-container {
+        /* Stil */
+    }
+</style>
+{% endblock %}

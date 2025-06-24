@@ -1,0 +1,114 @@
+<!-- templates/customer_panel/customer_order_detail.html -->
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Sipariş Detayı: {{ order.order_id }}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h3">Sipariş Detayı: {{ order.order_id }}</h1>
+    {# Müşteri panelinden sipariş iptal/iade gibi butonlar eklenebilir, ancak onay mekanizması düşünülmeli #}
+</div>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-primary text-white">
+                Sipariş Bilgileri
+            </div>
+            <div class="card-body">
+                <p><strong>Sipariş Numarası:</strong> {{ order.order_id }}</p>
+                <p><strong>Sipariş Tarihi:</strong> {{ order.order_date|date:"d M Y H:i" }}</p>
+                <p><strong>Sipariş Durumu:</strong>
+                    {% if order.order_status == 'new' %}
+                        <span class="badge bg-info">{{ order.get_order_status_display }}</span>
+                    {% elif order.order_status == 'accepted' %}
+                        <span class="badge bg-primary">{{ order.get_order_status_display }}</span>
+                    {% elif order.order_status == 'shipped' %}
+                        <span class="badge bg-warning">{{ order.get_order_status_display }}</span>
+                    {% elif order.order_status == 'delivered' %}
+                        <span class="badge bg-success">{{ order.get_order_status_display }}</span>
+                    {% elif order.order_status == 'cancelled' or order.order_status == 'returned' %}
+                        <span class="badge bg-danger">{{ order.get_order_status_display }}</span>
+                    {% else %}
+                        <span class="badge bg-secondary">{{ order.get_order_status_display }}</span>
+                    {% endif %}
+                </p>
+                <p><strong>Sipariş Tamamlandı mı?:</strong>
+                    {% if order.is_completed %}
+                        <span class="badge bg-success">Evet</span>
+                    {% else %}
+                        <span class="badge bg-warning">Hayır</span>
+                    {% endif %}
+                </p>
+                <p><strong>Notlar:</strong> {{ order.notes|linebreaksbr|default:"Yok" }}</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-success text-white">
+                Ödeme ve Teslimat Bilgileri
+            </div>
+            <div class="card-body">
+                <p><strong>Ödeme Durumu:</strong>
+                    {% if order.payment_status == 'paid' %}
+                        <span class="badge bg-success">{{ order.get_payment_status_display }}</span>
+                    {% elif order.payment_status == 'pending' %}
+                        <span class="badge bg-warning">{{ order.get_payment_status_display }}</span>
+                    {% else %}
+                        <span class="badge bg-secondary">{{ order.get_payment_status_display }}</span>
+                    {% endif %}
+                </p>
+                <p><strong>Ödeme Yöntemi:</strong> {{ order.get_payment_method_display|default:"Belirtilmemiş" }}</p>
+                <p><strong>Toplam Tutar:</strong> {{ order.total_amount|floatformat:2 }} TL</p>
+                <p><strong>İndirim Kodu:</strong> {{ order.discount_code|default:"Yok" }}</p>
+                <p><strong>İndirim Tutarı:</strong> {{ order.discount_amount|floatformat:2 }} TL</p>
+                <hr>
+                <p><strong>Teslimat Adresi:</strong> {{ order.delivery_address|linebreaksbr }}</p>
+                <p><strong>Kargo Firması:</strong> {{ order.shipping_company|default:"Belirtilmemiş" }}</p>
+                <p><strong>Takip Numarası:</strong> {{ order.tracking_number|default:"Yok" }}</p>
+                <p><strong>Tahmini Teslimat Tarihi:</strong> {{ order.estimated_delivery_date|date:"d M Y"|default:"Belirtilmemiş" }}</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card shadow-sm mb-4">
+    <div class="card-header bg-info text-white">
+        Sipariş Edilen Ürünler
+    </div>
+    <div class="card-body">
+        {% if order.items.all %}
+        <div class="table-responsive">
+            <table class="table table-bordered table-hover">
+                <thead>
+                    <tr>
+                        <th scope="col">Ürün Adı</th>
+                        <th scope="col">Miktar</th>
+                        <th scope="col">Birim Fiyatı</th>
+                        <th scope="col">Toplam Ürün Fiyatı</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in order.items.all %}
+                    <tr>
+                        <td>{{ item.product.name|default:"Silinmiş Ürün" }} ({{ item.product.product_code|default:"-" }})</td>
+                        <td>{{ item.quantity }}</td>
+                        <td>{{ item.unit_price|floatformat:2 }} TL</td>
+                        <td>{{ item.total_price|floatformat:2 }} TL</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <p class="text-muted">Bu siparişe ait ürün bulunmamaktadır.</p>
+        {% endif %}
+    </div>
+</div>
+
+<div class="mt-4 text-center">
+    <a href="{% url 'customer_panel:customer_dashboard' %}" class="btn btn-outline-secondary"><i class="fas fa-arrow-left"></i> Siparişlerime Dön</a>
+</div>
+{% endblock %}
